@@ -39,6 +39,12 @@
     }
   }
 
+  .edited {
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 14px;
+  }
+
   .postContent {
     margin-top: 64px;
 
@@ -65,4 +71,42 @@
       color: var(--body);
     }
   }
+
+  .separator {
+    border: 1px solid var(--separator);
+  }
+
+  .navPosts {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 80px;
+    margin-top: 60px;
+
+    .prevPost {
+      text-align: left;
+    }
+
+    .nextPost {
+      text-align: right;
+      align-self: flex-end;
+    }
+
+    .prevPost, .nextPost {
+      height: 50px;
+      color: var(--heading);
+      font-size: 18px;
+      line-height: 18px;
+      display: block;
+
+      strong {
+        color: var(--highlight);
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 16px;
+        display: block;
+        margin-top: 8px;
+      }
+    }
+  }
+
 }
