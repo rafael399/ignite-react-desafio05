@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { GetStaticPaths, GetStaticPathsResult, GetStaticProps } from 'next';
+import { useMemo, useCallback } from 'react';
+import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { format } from 'date-fns';
@@ -38,17 +38,24 @@ interface PostProps {
 }
 
 export default function Post({ post }: PostProps): JSX.Element {
-  const [readingTime, setReadingTime] = useState(0);
   const router = useRouter();
 
-  useEffect(() => {
+  const readingTime = useMemo(() => {
     const numberOfWords = post?.data.content.reduce((accumulator, content) => {
-      const nOfWords = RichText.asText(content.body).length;
+      const reg = new RegExp(/[^a-zA-Z0-9]/g);
+
+      const nOfWords = RichText.asText(content.body).split(reg).length;
       return accumulator + nOfWords;
     }, 0);
 
-    setReadingTime(Math.ceil(numberOfWords / 200));
+    return Math.ceil(numberOfWords / 200);
   }, [post]);
+
+  const formatDate = useCallback(date => {
+    return format(new Date(date), 'dd MMM yyyy', {
+      locale: ptBR,
+    });
+  }, []);
 
   if (router.isFallback) {
     return <div>Carregando...</div>;
@@ -70,7 +77,7 @@ export default function Post({ post }: PostProps): JSX.Element {
           <section>
             <time>
               <FiCalendar size={20} />
-              {post.first_publication_date}
+              {formatDate(post.first_publication_date)}
             </time>{' '}
             <section>
               <FiUser size={20} />
@@ -83,7 +90,7 @@ export default function Post({ post }: PostProps): JSX.Element {
           </section>
 
           {post.data.content.map(cont => (
-            <div className={styles.postContent} key={cont.body.length}>
+            <div className={styles.postContent} key={cont.body[0].text.length}>
               <h2>{cont.heading}</h2>
 
               <div
@@ -98,22 +105,22 @@ export default function Post({ post }: PostProps): JSX.Element {
   );
 }
 
-export const getStaticPaths: GetStaticPaths = async (): Promise<
-  GetStaticPathsResult<{
-    slug: string;
-  }>
-> => {
+export const getStaticPaths: GetStaticPaths = async () => {
   const prismic = getPrismicClient();
+
   const posts = await prismic.query(
     [Prismic.predicates.at('document.type', 'posts')],
     {
-      fetch: [],
-      pageSize: 1,
+      fetch: ['criando-um-app-cra-do-zero1'],
     }
   );
 
+  const paths = posts.results.map(post => {
+    return { params: { slug: post.uid } };
+  });
+
   return {
-    paths: [{ params: { slug: posts.results[0].uid } }],
+    paths,
     fallback: true,
   };
 };
@@ -125,25 +132,19 @@ export const getStaticProps: GetStaticProps = async (
   const prismic = getPrismicClient();
   const response = await prismic.getByUID('posts', String(slug), {});
 
-  const post: Post = {
-    first_publication_date: format(
-      new Date(response.first_publication_date),
-      'dd MMM yyyy',
-      {
-        locale: ptBR,
-      }
-    ),
+  const post = {
+    uid: response.uid,
+    first_publication_date: response.first_publication_date,
     data: {
       title: response.data.title,
+      subtitle: response.data.subtitle,
       banner: {
-        url: response.url,
+        url: response.data.banner.url,
       },
       author: response.data.author,
       content: response.data.content,
     },
   };
-
-  console.log(JSON.stringify(post, null, 2));
 
   return {
     props: { post },

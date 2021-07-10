@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { GetStaticProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { FiCalendar, FiUser } from 'react-icons/fi';
 import Prismic from '@prismicio/client';
 
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { getPrismicClient } from '../services/prismic';
 
 import commonStyles from '../styles/common.module.scss';
@@ -37,6 +39,12 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
     setPosts(postsPagination);
   }, [postsPagination]);
 
+  const formatDate = useCallback(date => {
+    return format(new Date(date), 'dd MMM yyyy', {
+      locale: ptBR,
+    });
+  }, []);
+
   const nextPage = (): void => {
     fetch(postsPagination.next_page)
       .then(response => response.json())
@@ -44,13 +52,7 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
         const results = data.results.map((post: Post) => {
           return {
             uid: post.uid,
-            first_publication_date: new Date(
-              post.first_publication_date
-            ).toLocaleDateString('pt-BR', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-            }),
+            first_publication_date: post.first_publication_date,
             data: {
               title: post.data.title,
               subtitle: post.data.subtitle,
@@ -86,7 +88,7 @@ export default function Home({ postsPagination }: HomeProps): JSX.Element {
                 <section>
                   <time>
                     <FiCalendar size={20} />
-                    {post.first_publication_date}
+                    {formatDate(post.first_publication_date)}
                   </time>{' '}
                   <FiUser size={20} />
                   {post.data.author}
@@ -121,13 +123,7 @@ export const getStaticProps: GetStaticProps = async (): Promise<{
   const posts = postsResponse.results.map(post => {
     return {
       uid: post.uid,
-      first_publication_date: new Date(
-        post.first_publication_date
-      ).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      }),
+      first_publication_date: post.first_publication_date,
       data: {
         title: post.data.title,
         subtitle: post.data.subtitle,
