@@ -243,7 +243,7 @@ export const getStaticProps: GetStaticProps<PostProps> = async ({
   const previousPost = previousPostResponse?.uid
     ? {
         uid: previousPostResponse.uid,
-        title: previousPostResponse.data.title,
+        title: previousPostResponse.data?.title,
       }
     : null;
 
@@ -260,7 +260,7 @@ export const getStaticProps: GetStaticProps<PostProps> = async ({
   const nextPost = nextPostResponse?.uid
     ? {
         uid: nextPostResponse.uid,
-        title: nextPostResponse.data.title,
+        title: nextPostResponse.data?.title,
       }
     : null;
 
